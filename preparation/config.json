@@ -1,7 +1,1 @@
-{
-fmri_raw: "/storage/workspace/eickenbe/data/dan/dan/MEG/",
-meg_raw: "/storage/workspace/eickenbe/data/dan/dan/MEG/",
-openfmri_dir: "/storage/workspace/eickenberg/data/parietal_retreat/henson_openfmri"
-}
-
-
+{"meg_raw": "/storage/workspace/eickenbe/data/dan/dan/MEG/", "openfmri_dir": "/storage/workspace/eickenberg/data/parietal_retreat/henson_openfmri", "fmri_raw": "/storage/workspace/eickenbe/data/dan/dan/MEG/"}
