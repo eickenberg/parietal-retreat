@@ -6,9 +6,12 @@ from nilearn._utils import concat_niimgs
 import nibabel as nb
 import json
 import shutil
+import numpy as np
+import warnings
 
 
-def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None):
+def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None,
+            resample_if_necessary=False):
 
     if run_ids is None:
         run_ids = range(1, 10)
@@ -30,7 +33,27 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None):
         henson_run_files = sorted(henson_run_dir.glob(
             "fMR09029-0003-00???-000???-01.nii"))
 
-        concatenated = concat_niimgs(henson_run_files)
+        try:
+            # This only works if affines, shape, etc are equal
+            # it is actually not the case as I just saw
+            concatenated = concat_niimgs(henson_run_files)
+        except ValueError:
+            ref_affine = nb.load(henson_run_files[0]).get_affine()
+            niimgs = [nb.load(hrf) for hrf in henson_run_files]
+            for i, niimg in enumerate(niimgs):
+                aff = niimg.get_affine()
+                if np.abs(
+                    np.linalg.norm(
+                        np.linalg.inv(ref_affine).dot(aff), 2) - 1) > 1e-6:
+                    warnings.warn("File %s has a significantly different affine %s from %s" % (hrf.basename(), str(aff), str(ref_affine)))
+                
+                if resample_if_necessary:
+                    niimgs[i] = resample_img(niimg, target_affine=ref_affine,
+                                             target_shape=niimg.shape)
+                else:
+                    niimgs[i].affine_ = ref_affine
+
+
         nb.save(concatenated, openfmri_run_dir / "bold.nii.gz")
         keep_filenames_file = openfmri_run_dir / "original_files.json"
         json.dump([hrf.basename() for hrf in henson_run_files],
