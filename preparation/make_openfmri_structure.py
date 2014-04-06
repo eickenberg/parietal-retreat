@@ -57,4 +57,5 @@ if __name__ == "__main__":
                    [int(sid) for sid in args.subject_ids]) or range(1, 17)
 
     for subject_id in subject_ids:
+        print "Subject id %d" % subject_id
         convert(subject_id, config["fmri_raw"], config["openfmri_base"])
