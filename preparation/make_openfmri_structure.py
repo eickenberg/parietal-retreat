@@ -29,7 +29,7 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None,
         openfmri_run_dir = openfmri_bold_dir / "task001_run001"
         if not openfmri_run_dir.exists():
             openfmri_run_dir.makedirs()
-
+        stop
         henson_run_files = sorted(henson_run_dir.glob(
             "fMR09029-0003-00???-000???-01.nii"))
 
@@ -52,7 +52,7 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None,
                                              target_shape=niimg.shape)
                 else:
                     niimgs[i].affine_ = ref_affine
-            concatenated = concat_niimgs(henson_run_files)
+            concatenated = concat_niimgs(niimgs)
 
         nb.save(concatenated, openfmri_run_dir / "bold.nii.gz")
         keep_filenames_file = openfmri_run_dir / "original_files.json"
