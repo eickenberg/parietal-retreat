@@ -56,3 +56,5 @@ if __name__ == "__main__":
     subject_ids = (args is not None and 
                    [int(sid) for sid in args.subject_ids]) or range(1, 17)
 
+    for subject_id in subject_ids:
+        convert(subject_id, config["fmri_raw"], config["openfmri_base"])
