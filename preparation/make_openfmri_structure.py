@@ -82,4 +82,4 @@ if __name__ == "__main__":
     for subject_id in subject_ids:
         print "Subject id %d" % subject_id
         convert(subject_id, config["fmri_raw"], config["openfmri_dir"],
-                resample_if_necessary=True)
+                resample_if_necessary=False)
