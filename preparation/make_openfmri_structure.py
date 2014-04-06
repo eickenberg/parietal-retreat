@@ -52,7 +52,7 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None,
                                              target_shape=niimg.shape)
                 else:
                     niimgs[i].affine_ = ref_affine
-
+            concatenated = concat_niimgs(henson_run_files)
 
         nb.save(concatenated, openfmri_run_dir / "bold.nii.gz")
         keep_filenames_file = openfmri_run_dir / "original_files.json"
@@ -81,4 +81,5 @@ if __name__ == "__main__":
 
     for subject_id in subject_ids:
         print "Subject id %d" % subject_id
-        convert(subject_id, config["fmri_raw"], config["openfmri_dir"])
+        convert(subject_id, config["fmri_raw"], config["openfmri_dir"],
+                resample_if_necessary=True)
