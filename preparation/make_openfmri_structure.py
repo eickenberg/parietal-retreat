@@ -13,8 +13,8 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None):
     if run_ids is None:
         run_ids = range(1, 10)
 
-    henson_subject_dir = path(henson_base_dir) / "Sub%02d" % subject_id
-    openfmri_subject_dir = path(output_base_dir) / "sub%03d" % subject_id
+    henson_subject_dir = path(henson_base_dir) / ("Sub%02d" % subject_id)
+    openfmri_subject_dir = path(output_base_dir) / ("sub%03d" % subject_id)
 
     # Take all fmri volumes and concatenate them into one
     henson_bold_dir = henson_subject_dir / "BOLD"
@@ -22,7 +22,7 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None):
 
     for run_id in run_ids:
         print "run id %d" % run_id
-        henson_run_dir = henson_bold_dir / "Run_%02d"
+        henson_run_dir = henson_bold_dir / ("Run_%02d" % run_id)
         openfmri_run_dir = openfmri_bold_dir / "task001_run001"
         if not openfmri_run_dir.exists():
             openfmri_run_dir.makedirs()
