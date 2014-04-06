@@ -29,7 +29,7 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None,
         openfmri_run_dir = openfmri_bold_dir / "task001_run001"
         if not openfmri_run_dir.exists():
             openfmri_run_dir.makedirs()
-        stop
+
         henson_run_files = sorted(henson_run_dir.glob(
             "fMR09029-0003-00???-000???-01.nii"))
 
@@ -82,4 +82,4 @@ if __name__ == "__main__":
     for subject_id in subject_ids:
         print "Subject id %d" % subject_id
         convert(subject_id, config["fmri_raw"], config["openfmri_dir"],
-                resample_if_necessary=True)
+                resample_if_necessary=False)
