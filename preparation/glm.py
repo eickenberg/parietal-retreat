@@ -3,7 +3,6 @@ import numpy as np
 from nipy.modalities.fmri.experimental_paradigm import BlockParadigm
 from nipy.modalities.fmri.design_matrix import make_dmtx
 from path import path
-import config
 import nibabel as nb
 from nipy.modalities.fmri.glm import FMRILinearModel
 
