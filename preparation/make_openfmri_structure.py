@@ -31,27 +31,37 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None,
             openfmri_run_dir.makedirs()
 
         henson_run_files = sorted(henson_run_dir.glob(
-            "fMR09029-0003-00???-000???-01.nii"))
+            "fMR09029-00??-00???-000???-01.nii"))
+
+        if subject_id == 14 and run_id == 2:
+            # File fMR09029-0004-00010-000010-01.nii is broken
+            henson_run_files.remove(henson_run_dir / 
+                                    "fMR09029-0004-00010-000010-01.nii")
 
         try:
             # This only works if affines, shape, etc are equal
             # it is actually not the case as I just saw
             concatenated = concat_niimgs(henson_run_files)
         except ValueError:
+
             ref_affine = nb.load(henson_run_files[0]).get_affine()
             niimgs = [nb.load(hrf) for hrf in henson_run_files]
+
             for i, niimg in enumerate(niimgs):
                 aff = niimg.get_affine()
                 if np.abs(
                     np.linalg.norm(
-                        np.linalg.inv(ref_affine).dot(aff), 2) - 1) > 1e-6:
+                        np.linalg.inv(ref_affine).dot(aff)
+                        - np.eye(4), 2)) > 1e-6:
                     warnings.warn("File %s has a significantly different affine %s from %s" % (hrf.basename(), str(aff), str(ref_affine)))
                 
                 if resample_if_necessary:
                     niimgs[i] = resample_img(niimg, target_affine=ref_affine,
                                              target_shape=niimg.shape)
                 else:
-                    niimgs[i].affine_ = ref_affine
+                    tmp = niimg.get_affine()
+                    niimg._affine = ref_affine
+
             concatenated = concat_niimgs(niimgs)
 
         nb.save(concatenated, openfmri_run_dir / "bold.nii.gz")
@@ -65,7 +75,7 @@ def convert(subject_id, henson_base_dir, output_base_dir, run_ids=None,
                           "highres001.nii.gz")
     if not openfmri_anat_file.dirname().exists():
         openfmri_anat_file.dirname().makedirs()
-    shutil.copy(henson_anat_file, openfmri_anat_file)
+    nb.save(nb.load(henson_anat_file), openfmri_anat_file)
 
 
 if __name__ == "__main__":
@@ -76,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--subject-ids")
 
     args = parser.parse_args()
-    subject_ids = (args is not None and 
+    subject_ids = (args.subject_ids is not None and
                    [int(sid) for sid in args.subject_ids]) or range(1, 17)
 
     for subject_id in subject_ids:

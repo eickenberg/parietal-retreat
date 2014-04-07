@@ -3,18 +3,22 @@ import re
 import numpy as np
 import nibabel
 from joblib import Parallel, delayed
-from pypreprocess.nipype_preproc_spm_utils import do_subject_preproc
 from nipy.modalities.fmri.experimental_paradigm import BlockParadigm
 from nipy.modalities.fmri.design_matrix import make_dmtx
 from nipy.modalities.fmri.glm import FMRILinearModel
 from nipy.labs.mask import intersect_masks
 from fetch_henson_data import get_subject_data_from_disk
+from pypreprocess.purepython_preproc_utils import (do_subject_preproc,
+                                                   SubjectData)
+from pypreprocess.nipype_preproc_spm_utils import (
+    do_subject_preproc as nipype_do_subject_preproc)
+print nipype_do_subject_preproc
 from pypreprocess.reporting.glm_reporter import generate_subject_stats_report
-from pypreprocess.reporting.base_reporter import ProgressReport, pretty_time
+from pypreprocess.reporting.base_reporter import (ProgressReport,
+                                                  pretty_time
+                                                  )
 
-import json
-config = json.load(open("config.json"))
-output_dir = os.path.join(config["openfmri_dir"], "preproc_elvis")
+output_dir = os.path.join(os.getcwd(), "BrainHack_results")
 
 
 def make_paradigm(filename, **kwargs):
@@ -42,13 +46,15 @@ def make_paradigm(filename, **kwargs):
 
 
 def _preprocess_and_analysis_subject(subject_data,
+                                     do_normalize=False,
+                                     fwhm=0.,
                                      slicer='z',
                                      cut_coords=6,
                                      threshold=3.,
-                                     cluster_th=15,
-                                     **preproc_params):
+                                     cluster_th=15
+                                     ):
     """
-    Preprocesses the subject and then fits (mass-univariate) GLM thereup.
+    Preprocesses the subject and then fits (mass-univariate) GLM thereupon.
 
     """
 
@@ -70,9 +76,29 @@ def _preprocess_and_analysis_subject(subject_data,
             output_dir, subject_data['subject_id'])
 
     # preprocess the data
-    subject_data = do_subject_preproc(subject_data,
-                                      **preproc_params
+    subject_data = do_subject_preproc(SubjectData(**subject_data),
+                                      realign=True,
+                                      coregister=True,
+                                      report=True,
+                                      cv_tc=False
                                       )
+    assert not subject_data.anat is None
+
+    # norm
+    if do_normalize:
+        subject_data = nipype_do_subject_preproc(
+            subject_data,
+            realign=False,
+            coreg=False,
+            segment=True,
+            normalize=True,
+            func_write_voxel_sizes=[3, 3, 3],
+            anat_write_voxel_sizes=[2, 2, 2],
+            fwhm=fwhm,
+            hardlink_output=False,
+            report=True
+            )
+
     # chronometry
     stats_start_time = pretty_time()
 
@@ -214,6 +240,8 @@ def _preprocess_and_analysis_subject(subject_data,
         cluster_th=cluster_th,
         slicer=slicer,
         cut_coords=cut_coords,
+        anat=nibabel.load(subject_data.anat).get_data(),
+        anat_affine=nibabel.load(subject_data.anat).get_affine(),
         design_matrices=design_matrices,
         subject_id=subject_data.subject_id,
         start_time=stats_start_time,
@@ -225,7 +253,7 @@ def _preprocess_and_analysis_subject(subject_data,
         hfcut=hfcut,
         drift_model=drift_model,
         hrf_model=hrf_model,
-        paradigm=dict(("Run_%02i" % (run_id + 1), paradigms[run_id])
+        paradigm=dict(("Run_%02i" % (run_id + 1), paradigms[run_id].__dict__)
                       for run_id in run_ids),
         frametimes=dict(("Run_%02i" % (run_id + 1), frametimes_list[run_id])
                         for run_id in run_ids),
@@ -247,19 +275,12 @@ if __name__ == '__main__':
 
     # run intra-subject GLM (one per subject) and the collect the results
     # to form input for group-level analysis
-    n_jobs = 1  # int(os.environ.get('N_JOBS', -1))
+    n_jobs = int(os.environ.get('N_JOBS', -1))
     group_glm_inputs = Parallel(n_jobs=n_jobs, verbose=100)(delayed(
             _preprocess_and_analysis_subject)(
             get_subject_data_from_disk("Sub%02i" % (subject_id + 1)),
-            realign=True,
-            coregister=True,
-            segment=False,
-            normalize=False,
-            # fwhm=8.,
-            # func_write_voxel_sizes=[3, 3, 3],
-            # anat_write_voxel_sizes=[2, 2, 2],
-            hardlink_output=False,
-            report=False,
+            do_normalize=True,
+            fwhm=[8., 8., 8.],
             threshold=threshold,
             slicer=slicer,
             cut_coords=cut_coords,
