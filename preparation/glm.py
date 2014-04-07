@@ -63,6 +63,8 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
     design_matrices = []
     n_scans = []
     all_frametimes = []
+    list_of_contrast_dicts = []  # one dict per run
+
     for bold_file, mvt_file, trial_file in zip(task_bold_files, 
                                                task_mvt_files,
                                                trial_files):
@@ -143,7 +145,7 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
                                      [z_map, eff_map, var_map]):
             map_dir = output_dir / ('%s_maps' % map_type)
             if not map_dir.exists():
-                map_dir.make_dirs()
+                map_dir.makedirs()
             map_path = map_dir / ('%s.nii.gz' % contrast_id)
             print "\t\tWriting %s ..." % map_path
             nb.save(out_map, map_path)
