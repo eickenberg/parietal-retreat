@@ -1,3 +1,7 @@
+import matplotlib
+matplotlib.use('Agg')
+
+
 import re
 import numpy as np
 from nipy.modalities.fmri.experimental_paradigm import BlockParadigm
@@ -49,6 +53,9 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
     if not output_dir.exists():
         output_dir.makedirs()
 
+
+    anat_file = subject_dir / "highres001.nii"
+    anat = nb.load(anat_file)
     run_ids = range(1, 10)
 
     task_bold_files = [subject_dir.glob("task001_run%03d/rbold*.nii"
@@ -75,6 +82,7 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
         _n_scans = nb.load(bold_file).shape[-1]
         n_scans.append(_n_scans)
         paradigm = make_paradigm(trial_file)
+        paradigms.append(paradigm)
         movements = np.loadtxt(mvt_file)
 
         tr = 2.
@@ -172,7 +180,7 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
     contrasts = dict((cid, cval[0]) for cid, cval in contrasts.iteritems())
 
     slicer = 'z'
-    cut_coords = 5
+    cut_coords = [-20, -10, 0, 10, 20, 30, 40, 50]
     threshold = 3.
     cluster_th = 15
 
@@ -182,6 +190,8 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
         contrasts,
         z_maps,
         fmri_glm.mask,
+        anat_affine=anat.get_affine(),
+        anat=anat.get_data(),
         threshold=threshold,
         cluster_th=cluster_th,
         slicer=slicer,
@@ -197,9 +207,9 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
         hfcut=hfcut,
         drift_model=drift_model,
         hrf_model=hrf_model,
-        paradigm=dict(("Run_%02i" % (run_id), paradigms[run_id])
+        paradigm=dict(("Run_%02i" % (run_id), paradigms[run_id - 1])
                       for run_id in run_ids),
-        frametimes=dict(("Run_%02i" % (run_id), all_frametimes[run_id])
+        frametimes=dict(("Run_%02i" % (run_id), all_frametimes[run_id - 1])
                         for run_id in run_ids),
         # fwhm=fwhm
         )
