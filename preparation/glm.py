@@ -43,8 +43,9 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
     subject_dir = path(bold_base_folder) / ("sub%03d" % subject_id)
     output_dir = (path(output_base_folder) / ("sub%03d" % subject_id) /
                   "model001")
+    print output_dir
     if not output_dir.exists():
-        output_dir.make_dirs()
+        output_dir.makedirs()
 
 
     task_bold_files = [subject_dir.glob("task001_run%03d/rbold*.nii"
