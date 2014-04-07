@@ -44,7 +44,8 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder):
     task_bold_files = [subject_dir.glob("task001_run%03d/rbold*.nii"
                                         % rid)[0]
                        for rid in range(1, 10)]
-    task_mvt_files = [subject_dir / ("task001_run%03d/rp_bold.txt" % rid)
+    task_mvt_files = [subject_dir.glob("task001_run%03d/rp_bold*.txt" % 
+                                       rid)[0]
                       for rid in range(1, 10)]
 
     trial_files = [(path(trial_base_folder) / ("Sub%02d" % subject_id) /
