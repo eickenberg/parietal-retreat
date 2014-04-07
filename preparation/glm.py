@@ -47,7 +47,7 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder):
                       for rid in range(1, 10)]
 
     trial_files = [(path(trial_base_folder) / ("Sub%02d" % subject_id) /
-                   "BOLD" / ("run_%02d_spmdef.txt" % rid))
+                   "BOLD" / "Trials" / ("run_%02d_spmdef.txt" % rid))
                    for rid in range(1, 10)]
 
     paradigms = []
@@ -78,7 +78,7 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder):
             hfcut=hfcut,
             add_regs=movements,
             add_reg_names=[
-                "Tx, Ty, Tz, R1, R2, R3"])
+                "Tx", "Ty", "Tz", "R1", "R2", "R3"])
 
         design_matrices.append(design_matrix)
         all_frametimes.append(frametimes)
@@ -100,8 +100,6 @@ if __name__ == "__main__":
     subject_ids = (args.subject_ids is not None and
                    [int(sid) for sid in args.subject_ids]) or range(1, 17)
 
-    import json
-    config = json.load(open(config.json))
     bold_base_folder = config["preprocessed"]
     trial_base_folder = config["fmri_raw"]
 
