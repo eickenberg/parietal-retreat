@@ -138,6 +138,25 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
             output_variance=True
             )
 
+        for map_type, out_map in zip(['z', 'effects', 'variance'], 
+                                     [z_map, eff_map, var_map]):
+            map_dir = output_dir / ('%s_maps' % map_type)
+            if not map_dir.exists():
+                map_dir.make_dirs()
+            map_path = map_dir / ('%s.nii.gz' % contrast_id)
+            print "\t\tWriting %s ..." % map_path
+            nb.save(out_map, map_path)
+
+            # collect zmaps for contrasts we're interested in
+            if map_type == 'z':
+                z_maps[contrast_id] = map_path
+
+            if map_type == 'effects':
+                effects_maps[contrast_id] = map_path
+
+            if map_type == "variance":
+                effects_maps[contrast_id] = map_path
+
     return fmri_glm
 
 
