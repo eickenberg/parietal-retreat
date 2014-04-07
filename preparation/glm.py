@@ -6,6 +6,10 @@ from path import path
 import nibabel as nb
 from nipy.modalities.fmri.glm import FMRILinearModel
 
+import json
+
+config = json.load(open("config.json"))
+
 preprocessed_dir = config["preprocessed"]
 
 
