@@ -5,6 +5,8 @@ from nipy.modalities.fmri.design_matrix import make_dmtx
 from path import path
 import nibabel as nb
 from nipy.modalities.fmri.glm import FMRILinearModel
+from pypreprocess.reporting.glm_reporter import generate_subject_stats_report
+from pypreprocess.reporting.base_reporter import ProgressReport, pretty_time
 
 import json
 
@@ -46,18 +48,19 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
     if not output_dir.exists():
         output_dir.make_dirs()
 
+    run_ids = range(1, 10)
 
     task_bold_files = [subject_dir.glob("task001_run%03d/rbold*.nii"
                                         % rid)[0]
-                       for rid in range(1, 10)]
+                       for rid in run_ids]
     task_mvt_files = [subject_dir.glob("task001_run%03d/rp_bold*.txt" % 
                                        rid)[0]
-                      for rid in range(1, 10)]
+                      for rid in run_ids]
 
     trial_files = [(path(trial_base_folder) / ("Sub%02d" % subject_id) /
                    "BOLD" / "Trials" / ("run_%02d_spmdef.txt" % rid))
                    for rid in range(1, 10)]
-
+    stats_start_time = pretty_time()
     paradigms = []
     design_matrices = []
     n_scans = []
@@ -156,6 +159,47 @@ def do_glm_for_subject(subject_id, bold_base_folder, trial_base_folder,
 
             if map_type == "variance":
                 effects_maps[contrast_id] = map_path
+
+    stats_report_dir = output_dir / "report"
+    if not stats_report_dir.exists():
+        stats_report_dir.makedirs()
+
+    stats_report_filename = stats_report_dir / "report_stats.html"
+    # remove repeated contrasts
+    contrasts = dict((cid, cval[0]) for cid, cval in contrasts.iteritems())
+
+    slicer = 'z'
+    cut_coords = 5
+    threshold = 3.
+    cluster_th = 15
+
+
+    generate_subject_stats_report(
+        stats_report_filename,
+        contrasts,
+        z_maps,
+        fmri_glm.mask,
+        threshold=threshold,
+        cluster_th=cluster_th,
+        slicer=slicer,
+        cut_coords=cut_coords,
+        design_matrices=design_matrices,
+        subject_id="sub%03d" % subject_id,
+        start_time=stats_start_time,
+        title="GLM for subject %s" % ("sub%03d" % subject_id),
+
+        # additional ``kwargs`` for more informative report
+        TR=tr,
+        n_scans=n_scans,
+        hfcut=hfcut,
+        drift_model=drift_model,
+        hrf_model=hrf_model,
+        paradigm=dict(("Run_%02i" % (run_id), paradigms[run_id])
+                      for run_id in run_ids),
+        frametimes=dict(("Run_%02i" % (run_id), all_frametimes[run_id])
+                        for run_id in run_ids),
+        # fwhm=fwhm
+        )
 
     return fmri_glm
 
