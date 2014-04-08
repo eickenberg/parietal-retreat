@@ -10,7 +10,7 @@ import cortex
 def realign_surface(subject_id):
 
     src_subj_name = "sub%03d" % subject_id
-    pycortex_subj_name = "Henson2010_%s" % src_subj_name
+    pycortex_subj_name = "Henson2010_Sub%02d" % subject_id
 
     bold_file = (path(config["preprocessed"]) / src_subj_name /
                  "task001_run001").glob("rbold*.nii")[0]
